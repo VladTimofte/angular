@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 
 import { AuthComponent } from './auth/auth.component';
 import { LearningResourcesComponent } from './learning-resources/learning-resources.component';
+import { AuthService } from './auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,10 @@ import { LearningResourcesComponent } from './learning-resources/learning-resour
   styleUrl: './app.component.css',
   imports: [AuthComponent, LearningResourcesComponent],
 })
-export class AppComponent {}
+export class AppComponent {
+
+  private authService = inject(AuthService)
+
+  isAdmin = computed(() => this.authService.activePermission() === 'admin')
+
+}
