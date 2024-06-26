@@ -1,0 +1,65 @@
+h1 {
+    padding: 0 1rem;
+}
+
+h2 {padding: 1rem;}
+
+mat-toolbar{
+    position:fixed;
+    top:0;
+    z-index: 99;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+}
+
+mat-sidenav-container {
+    height:100%;
+}
+
+// Move the content down so that it won't be hidden by the toolbar
+mat-sidenav {
+    padding-top: 3.5rem;
+    transition: width 0.3s ease;
+    @media screen and (min-width: 600px) {
+      padding-top: 4rem;
+    }
+
+    .entry{
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding:0.75rem;
+    }
+
+  }
+
+// Move the content down so that it won't be hidden by the toolbar
+mat-sidenav-content{
+    padding-top: 3.5rem;
+    @media screen and (min-width: 600px) {
+        padding-top: 4rem;
+    }
+}
+
+.expanded {
+    width: 250px;   
+}
+
+.menu-header-logo-txt, .menu-bar-left-element {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+app-root {
+    display: grid;
+    height: 100vh;
+}
