@@ -1,8 +1,8 @@
 <ng-container *ngIf="auth.isAuthenticated$ | async; else loggedOut">
-  <mat-toolbar color="primary">
+  <mat-toolbar class="mat-toolbar">
     <div class="menu-bar-left-element">
       <button mat-icon-button aria-label="Menu icon" (click)="toggleMenu()">
-        <mat-icon>menu</mat-icon>
+        <mat-icon class="mat-icon-menu">menu</mat-icon>
       </button>
       <div class="menu-header-logo-txt">
         <img
@@ -10,11 +10,14 @@
           alt="Ntt Data"
           width="150px"
         />
-        <h3>|&nbsp;&nbsp;Fleet Management System</h3>
+        <h3 class="menu-nav-title">|&nbsp;&nbsp;Fleet Management System</h3>
       </div>
     </div>
     <div>
-      <app-auth-button/>
+      <div class="user-actions-wrapper">
+        <mat-icon class="low-scale">notifications</mat-icon>
+        <app-auth-button/>
+      </div>
     </div>
   </mat-toolbar>
   <mat-sidenav-container autosize="true">
@@ -36,10 +39,25 @@
             <span *ngIf="!isCollapsed">Fleets</span>
           </span>
         </a>
+        <a mat-list-item (click)="navigateTo('employees')">
+          <span class="entry">
+            <mat-icon>people</mat-icon>
+            <span *ngIf="!isCollapsed">Employees</span>
+          </span>
+        </a>
+        <a mat-list-item (click)="navigateTo('allocations')">
+          <span class="entry">
+            <mat-icon>timeline</mat-icon>
+            <span *ngIf="!isCollapsed">Allocations</span>
+          </span>
+        </a>
       </mat-nav-list>
-    </mat-sidenav>
-    <mat-sidenav-content>
-      <h2>Content</h2>
+    </mat-sidenav> 
+    <mat-sidenav-content class="router-outlet-container">
+      <div class="actions-bar-wrapper">
+        <mat-icon class="low-scale">picture_as_pdf</mat-icon>
+        <mat-icon class="low-scale">person_add_alt</mat-icon>
+      </div>
       <router-outlet></router-outlet>
     </mat-sidenav-content>
   </mat-sidenav-container>

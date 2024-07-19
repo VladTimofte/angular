@@ -59,7 +59,47 @@ mat-sidenav-content{
     justify-content: center;
 }
 
-app-root {
-    display: grid;
-    height: 100vh;
+.mat-toolbar {
+    background: #6785C1;
 }
+
+.menu-nav-title, .mat-icon-menu {
+    color: white;
+}
+
+.router-outlet-container {
+    padding: 80px 50px;
+}
+
+.mat-toolbar {
+    box-shadow: 1px 1px 6px 0px rgba(0, 0, 0, 0.5);
+}
+
+.actions-bar-wrapper {
+    display: flex;
+    gap: 20px;
+    border-radius: 6px;
+    background: #6785C1;
+    color: white;
+    padding: 12px 24px;
+    margin-bottom: 30px;
+
+}
+
+.user-actions-wrapper {
+    display: flex;
+    color: white;
+    gap: 18px;
+    align-items: center;
+}
+
+mat-icon {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+}
+
+.mat-mdc-icon-button.mat-mdc-button-base {
+    color: black !important;
+  }
