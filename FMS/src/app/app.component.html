@@ -16,7 +16,7 @@
     <div>
       <div class="user-actions-wrapper">
         <mat-icon class="low-scale">notifications</mat-icon>
-        <app-auth-button/>
+        <app-auth-button />
       </div>
     </div>
   </mat-toolbar>
@@ -27,6 +27,23 @@
       [opened]="isMobile ? 'false' : 'true'"
     >
       <mat-nav-list>
+        <div mat-list-item (click)="navigateTo('')">
+          <div class="wrapper-profile-img">
+            <mat-icon *ngIf="isCollapsed">toggle_off</mat-icon>
+            <div class="is-collapsed-wrapper" *ngIf="!isCollapsed">
+              <img
+                class="img-profile-navbar"
+                src="../assets/profile_dummy.png"
+                alt="Profile Picture"
+              />
+              <div class="user-name-wrapper" *ngIf="auth.user$ | async as user">
+                <span>{{ user.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br />
+        <br />
         <a mat-list-item (click)="navigateTo('')">
           <span class="entry">
             <mat-icon>house</mat-icon>
@@ -51,12 +68,24 @@
             <span *ngIf="!isCollapsed">Allocations</span>
           </span>
         </a>
+        <a mat-list-item (click)="navigateTo('track')">
+          <span class="entry">
+            <mat-icon>near_me</mat-icon>
+            <span *ngIf="!isCollapsed">Track</span>
+          </span>
+        </a>
       </mat-nav-list>
-    </mat-sidenav> 
-    <mat-sidenav-content class="router-outlet-container">
-      <div class="actions-bar-wrapper">
+    </mat-sidenav>
+    <mat-sidenav-content
+      [ngClass]="{
+        'is-full-content-body': !conditionalDisplayActionBar(),
+        'router-outlet-container': conditionalDisplayActionBar()
+      }"
+    >
+      <div *ngIf="conditionalDisplayActionBar()" class="actions-bar-wrapper">
         <mat-icon class="low-scale">picture_as_pdf</mat-icon>
         <mat-icon class="low-scale">person_add_alt</mat-icon>
+        <mat-icon class="low-scale">mail</mat-icon>
       </div>
       <router-outlet></router-outlet>
     </mat-sidenav-content>
@@ -65,6 +94,6 @@
 
 <ng-template #loggedOut>
   <div class="login-card-wrapper">
-    <app-login/>
+    <app-login />
   </div>
 </ng-template>

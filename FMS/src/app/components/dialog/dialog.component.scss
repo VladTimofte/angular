@@ -31,6 +31,10 @@
     margin: 0;
     font-weight: 600;
     font-size: 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-direction: row;
   }
 
   .modal-body {
@@ -42,4 +46,12 @@
     justify-content: flex-end;
     margin-top: 10px;
     gap: 10px;
+  }
+
+  .error-icon, .question-icon, .warning-icon {
+    color: red;
+  }
+
+  .info-icon {
+    color: #6785C1;
   }

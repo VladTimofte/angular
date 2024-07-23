@@ -64,4 +64,9 @@ export class AppComponent {
       this.isCollapsed = !this.isCollapsed;
     }
   }
+
+  conditionalDisplayActionBar(): boolean {
+    const url = this.router.url;
+    return !url.includes('track');
+  }
 }

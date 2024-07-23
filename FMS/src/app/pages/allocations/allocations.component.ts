@@ -8,24 +8,19 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
 import { AgGridAngular } from 'ag-grid-angular';
-import * as moment from 'moment';
-import { MomentInput } from 'moment';
-import {
-  ColDef,
-  ICellRendererParams,
-  GridReadyEvent,
-  GridApi,
-  GridOptions,
-  RowClassParams
-} from 'ag-grid-community';
+import { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
 
 import { AddEditFleetModalComponent } from '../../components/add-edit-fleet-modal/add-edit-fleet-modal.component';
-import { AddEditEmployeeFormService } from 'src/app/services/add-edit-employee.service';
 import { DialogService } from 'src/app/services/dialog.service';
-import { EmployeeService } from 'src/app/services/employees.service';
+import { AllocationsService } from 'src/app/services/allocations.service';
+import { Allocation } from 'src/app/models/allocation.model';
+import { AddEditAllocationFormService } from 'src/app/services/add-edit-allocation.service';
+import { emptyAllocationObj } from 'src/app/shared/allocation';
+import { EmployeesService } from 'src/app/services/employees.service';
+import { FleetsService } from 'src/app/services/fleets.service';
+import * as moment from 'moment';
 import { Employee } from 'src/app/models/employee.model';
-import { emptyEmployeeObj } from 'src/app/shared/employee';
-import { documentExpired, documentExpiresWithinMonth } from 'src/app/utils/booleans';
+import { Fleet } from 'src/app/models/fleet.model';
 
 @Component({
   selector: 'app-allocations',
@@ -40,36 +35,39 @@ import { documentExpired, documentExpiresWithinMonth } from 'src/app/utils/boole
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EmployeesComponent implements OnInit, OnDestroy {
-  public filteredEmployees: Employee[] = [];
-  private EmployeesSubscription: Subscription | undefined;
+export class AllocationsComponent implements OnInit, OnDestroy {
+  public filteredAllocations: Allocation[] = [];
+  private AllocationsSubscription: Subscription | undefined;
   public searchTerm: string = '';
   private gridApi!: GridApi;
   public selectedRow: any;
-  gridOptions: GridOptions;
+  employees: Employee[];
+  fleets: Fleet[];
 
   constructor(
-    private employeeService: EmployeeService,
-    private addEditEmployeeService: AddEditEmployeeFormService,
-    private dialogService: DialogService
+    private allocationsService: AllocationsService,
+    private addEditAllocationFormService: AddEditAllocationFormService,
+    private dialogService: DialogService,
+    private employeesService: EmployeesService,
+    private fleetsService: FleetsService
   ) {
-    this.gridOptions = <GridOptions>{};
-    this.gridOptions.getRowStyle = this.getRowStyle.bind(this);
+    this.employees = this.employeesService.getEmployees();
+    this.fleets = this.fleetsService.getFleets();
   }
 
   ngOnInit(): void {
-    // Subscribe to Employees observable
-    this.EmployeesSubscription = this.employeeService
-      .getEmployeesObservable()
-      .subscribe((employees) => {
-        this.updateFilteredEmployees(employees);
+    // Subscribe to Allocations observable
+    this.AllocationsSubscription = this.allocationsService
+      .getAllocationsObservable()
+      .subscribe((allocations) => {
+        this.updateFilteredAllocations(allocations);
       });
   }
 
   ngOnDestroy(): void {
-    // Unsubscribe from Employees observable to avoid memory leaks
-    if (this.EmployeesSubscription) {
-      this.EmployeesSubscription.unsubscribe();
+    // Unsubscribe from Allocations observable to avoid memory leaks
+    if (this.AllocationsSubscription) {
+      this.AllocationsSubscription.unsubscribe();
     }
   }
 
@@ -78,41 +76,56 @@ export class EmployeesComponent implements OnInit, OnDestroy {
   }
 
   employeesColumns: ColDef[] = [
-    { field: 'firstName', flex: 2, filter: false },
-    { field: 'lastName', flex: 2, filter: false },
-    { field: 'cnp', flex: 2, filter: false },
     {
-      field: 'drivingLicenseExDate',
+      field: 'employeeId',
+      flex: 2,
+      filter: false,
+      cellRenderer: (params: { value: string }) => {
+        var foundEmployee = this.employeesService
+          .getEmployees()
+          .find((el) => el.id === params.value);
+          return foundEmployee ? foundEmployee?.firstName + ' ' + foundEmployee?.lastName : 'Deleted Employee' 
+      },
+    },
+    {
+      field: 'vehicleId',
+      flex: 2,
+      filter: false,
+      cellRenderer: (params: { value: string }) => {
+        var foundFleet = this.fleets.find((el) => el.id === params.value);
+        return foundFleet ? 
+          foundFleet?.make +
+          ' ' +
+          foundFleet?.model +
+          ' - ' +
+          foundFleet?.plateNumber
+        : 'Deleted Vehicle'
+      },
+    },
+    {
+      field: 'startDate',
       flex: 2,
       filter: false,
       cellRenderer: (params: { value: number }) => {
         return moment(params.value).format('DD-MM-YYYY');
       },
     },
-    { field: 'drivingLicenseCategories', flex: 2, filter: false },
-    { field: 'email', flex: 2, filter: false },
-    { field: 'phone', flex: 2, filter: false },
-    { field: 'jobDepartment', flex: 2, filter: false },
     {
-      field: 'emergencyContactName',
+      field: 'endDate',
       flex: 2,
       filter: false,
-      cellRenderer: (params: { value: ICellRendererParams }) => {
-        return params.value || '-';
+      cellRenderer: (params: { value: number }) => {
+        return moment(params.value).format('DD-MM-YYYY');
       },
-    },
-    { field: 'emergencyContactPhoneNumber',
-      flex: 2,
-      filter: false,
-      cellRenderer: (params: { value: ICellRendererParams; }) => {
-        return params.value || '-';
-      }, 
     },
   ];
 
-  private updateFilteredEmployees(employees: Employee[]): void {
-    // Update filteredEmployees based on current search term
-    this.filteredEmployees = this.filterEmployees(this.searchTerm, employees);
+  private updateFilteredAllocations(allocations: Allocation[]): void {
+    // Update filteredAllocations based on current search term
+    this.filteredAllocations = this.filterAllocations(
+      this.searchTerm,
+      allocations
+    );
     if (this.gridApi) {
       const rowData: any[] = [];
       this.gridApi.forEachNode(function (node) {
@@ -122,59 +135,88 @@ export class EmployeesComponent implements OnInit, OnDestroy {
         remove: rowData,
       })!;
       this.gridApi.applyTransaction({
-        add: this.filteredEmployees,
+        add: this.filteredAllocations,
       })!;
     }
   }
 
   searchInputListener(value: string) {
-    // Update search term and filteredEmployees
+    // Update search term and filteredAllocations
     this.searchTerm = value;
-    this.filteredEmployees = this.filterEmployees(
+    this.filteredAllocations = this.filterAllocations(
       value,
-      this.employeeService.getEmployees()
+      this.allocationsService.getAllocations()
     );
   }
 
   inputListener(value: string) {
-    // Handle input changes to update filteredEmployees
+    // Handle input changes to update filteredAllocations
     if (!value?.length) {
-      this.filteredEmployees = this.employeeService.getEmployees();
+      this.filteredAllocations = this.allocationsService.getAllocations();
     }
   }
 
-  private filterEmployees(
+  private filterAllocations(
     searchTerm: string,
-    employees: Employee[]
-  ): Employee[] {
+    allocations: Allocation[]
+  ): Allocation[] {
     // Check if searchTerm is null, undefined, or an empty string
     if (!searchTerm) {
-      return this.employeeService.getEmployees();
+      return this.allocationsService.getAllocations();
     }
-
-    // Filter fleets based on search term
+  
+    // Convert search term to lower case
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return employees.filter((employee) =>
-      Object.keys(employee).some((key) => {
-        const propValue = employee[key as keyof typeof employee];
-        return (
-          key !== 'id' &&
-          propValue !== null &&
-          propValue.toString().toLowerCase().includes(lowerCaseSearchTerm)
-        );
-      })
-    );
+  
+    return allocations.filter((allocation) => {
+      // Check if any property of the allocation matches the search term
+      return Object.keys(allocation).some((key) => {
+        const propValue = allocation[key as keyof typeof allocation];
+  
+        if (key === 'employeeId') {
+          // Find employee by ID
+          const employee = this.employees.find(e => e.id === propValue);
+          if (employee) {
+            const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+            return fullName.includes(lowerCaseSearchTerm);
+          }
+          return false;
+        } else if (key === 'vehicleId') {
+          // Find vehicle by ID
+          const fleet = this.fleets.find(f => f.id === propValue);
+          if (fleet) {
+            return (
+              fleet.make.toLowerCase().includes(lowerCaseSearchTerm) ||
+              fleet.model.toLowerCase().includes(lowerCaseSearchTerm) ||
+              fleet.plateNumber.toLowerCase().includes(lowerCaseSearchTerm)
+            );
+          }
+          return false;
+        } else if (key === 'startDate' || key === 'endDate') {
+          // Format date and check
+          const formattedDate = moment(propValue).format('DD-MM-YYYY');
+          return formattedDate.includes(lowerCaseSearchTerm);
+        } else {
+          // General case for other properties
+          return (
+            key !== 'id' &&
+            propValue !== null &&
+            propValue.toString().toLowerCase().includes(lowerCaseSearchTerm)
+          );
+        }
+      });
+    });
   }
 
-  addEmployee() {
-    this.addEditEmployeeService
-      .openAddEditEmployeeForm({
-        employee: emptyEmployeeObj,
-        isEmployeeUpdating: false,
+  addAllocation() {
+    this.addEditAllocationFormService
+      .openAddEditAllocationForm({
+        allocation: emptyAllocationObj,
+        isAllocationUpdating: false,
       })
       .then((confirmed) => {
         if (confirmed) {
-          console.log('Employee added'); // Todo: create a confirm message UI
+          console.log('Allocation added'); // Todo: create a confirm message UI
         }
       });
   }
@@ -183,40 +225,47 @@ export class EmployeesComponent implements OnInit, OnDestroy {
     this.selectedRow = this.gridApi.getSelectedRows();
   }
 
+  deselectRows() {
+    this.selectedRow = undefined;
+    this.gridApi.deselectAll();
+  }
+
   editRow() {
-    this.addEditEmployeeService
-      .openAddEditEmployeeForm({
-        employee: this.selectedRow[0],
-        isEmployeeUpdating: true,
+    this.addEditAllocationFormService
+      .openAddEditAllocationForm({
+        allocation: this.selectedRow[0],
+        isAllocationUpdating: true,
       })
       .then((confirmed) => {
         if (confirmed) {
-          console.log('Employee updated'); // Todo: create a confirm message UI
+          console.log('Allocation updated'); // Todo: create a confirm message UI
         }
       });
+      this.deselectRows()
   }
 
   onRemoveSelected() {
-    const selectedData = this.gridApi.getSelectedRows();
+    const selectedData = this.gridApi.getSelectedRows()[0];
+    const assignedEmployee = this.employees.find(
+      (el) => el.id === selectedData?.employeeId
+    );
+    const assignedVehicle = this.fleets.find(
+      (el) => el.id === selectedData?.vehicleId
+    );
     this.dialogService
       .openConfirmDialog({
         title: 'Confirm Deletion',
-        message: `Are you sure you want to delete: ${selectedData[0].firstName} ${selectedData[0].lastName}?`,
+        message: `Are you sure you want to unassign: 
+        ${assignedEmployee?.firstName} ${assignedEmployee?.lastName} from 
+        ${assignedVehicle?.make} ${assignedVehicle?.model} - 
+        ${assignedVehicle?.plateNumber}?`,
+        type: 'question',
       })
       .then((confirmed) => {
         if (confirmed) {
-          this.gridApi.applyTransaction({ remove: selectedData })!;
-          this.employeeService.removeEmployee(selectedData[0].id);
+          this.allocationsService.removeAllocation(selectedData.id);
         }
       });
-  }
-
-  getRowStyle(params: RowClassParams) {
-    if (documentExpired(params.data.drivingLicenseExDate)) {
-      return { background: 'rgba(255, 0, 0, 0.4) !important' };
-    } else if (documentExpiresWithinMonth(params.data.drivingLicenseExDate)) {
-      return { background: 'rgba(255, 255, 0, 0.4) !important' };
-    }
-    return undefined;
+      this.deselectRows()
   }
 }

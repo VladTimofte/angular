@@ -1,232 +1,144 @@
 <div (click)="onCancel()" class="backdrop"></div>
 <dialog open>
   <h2 class="modal-title">
-    {{
-      isAllocationUpdating
-        ? "Edit " + allocation.id
-        : "Add Employee"
-    }}
+    {{ isAllocationUpdating ? "Edit " + allocation.id : "Create Allocation" }}
   </h2>
   <hr />
   <form [formGroup]="modalForm" (ngSubmit)="onSubmit()">
     <div class="form-wrapper">
       <div class="row">
-        <div class="form-item">
-          <label for="firstName">First Name</label>
-          <input
-            type="text"
-            id="firstName"
-            formControlName="firstName"
-            placeholder="Enter First Name"
-          />
-          <div
-            *ngIf="
-              modalForm.get('firstName')?.invalid &&
-              modalForm.get('firstName')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('firstName')?.hasError('required')"
-              >First Name is required.</small
-            >
-          </div>
-        </div>
-
-        <div class="form-item">
-          <label for="lastName">Last Name</label>
-          <input
-            type="text"
-            id="lastName"
-            formControlName="lastName"
-            placeholder="Enter Last name"
-          />
-          <div
-            *ngIf="
-              modalForm.get('lastName')?.invalid &&
-              modalForm.get('lastName')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('lastName')?.hasError('required')"
-              >Last Name is required.</small
-            >
-          </div>
-        </div>
-
-        <div class="form-item">
-          <label for="cnp">CNP (ex. 5110102441483)</label>
-          <input
-            type="text"
-            id="cnp"
-            formControlName="cnp"
-            placeholder="Enter CNP"
-          />
-          <div
-            *ngIf="
-              modalForm.get('cnp')?.invalid && modalForm.get('cnp')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('cnp')?.hasError('required')"
-              >CNP is required.</small
-            >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('cnp')?.hasError('invalidCNP')"
-              >Invalid CNP.</small
-            >
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="form-item">
-          <label for="email">Email</label>
-          <input type="text" id="email" formControlName="email" placeholder="Enter Email"/>
-          <div
-            *ngIf="
-              modalForm.get('email')?.invalid && modalForm.get('email')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('email')?.hasError('required')"
-              >Email is required.</small
-            >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('email')?.hasError('email')"
-              >Please enter a valid email address.</small
-            >
-          </div>
-        </div>
-        <div class="form-item">
-          <label for="phone">Phone Number (ex. 0770123456)</label>
-          <input type="text" id="phone" formControlName="phone" placeholder="Enter Phone Number"/>
-          <div
-            *ngIf="
-              modalForm.get('phone')?.invalid && modalForm.get('phone')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('phone')?.hasError('required')"
-              >Phone Numberis required.</small
-            >
-          </div>
-        </div>
-
-        <div class="form-item">
-          <label for="jobDepartment">Job Department</label>
-          <select id="jobDepartment" formControlName="jobDepartment">
-            <option value="">Select A Job Department</option>
-            <option
-              *ngFor="let department of []"
-              [value]="department"
-            >
-              {{ department }}
-            </option>
-          </select>
-          <div
-            *ngIf="
-              modalForm.get('jobDepartment')?.invalid &&
-              modalForm.get('jobDepartment')?.touched
-            "
-          >
-            <small
-              class="error-message"
-              *ngIf="modalForm.get('jobDepartment')?.hasError('required')"
-              >Job Department is required.</small
-            >
-          </div>
-        </div>
-
-      </div>
-
-      <div class="row">
-
-        <div class="form-item">
-          <label for="drivingLicenseExDate">License Exp. Date</label>
-          <mat-form-field>
-            <mat-label>Choose a date</mat-label>
+        <mat-form-field>
+          <mat-label>Enter a date range</mat-label>
+          <mat-date-range-input [rangePicker]="picker" [min]="minDate">
             <input
+              matStartDate
+              placeholder="Start date"
               type="text"
-              id="drivingLicenseExDate"
-              formControlName="drivingLicenseExDate"
-              matInput
-              [matDatepicker]="picker"
+              id="startDate"
+              formControlName="startDate"
+              (dateChange)="keepAvailableVehiclesUpdated()"
             />
-            <mat-hint>MM/DD/YYYY</mat-hint>
-            <mat-datepicker-toggle
-              matIconSuffix
-              [for]="picker"
-            ></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
+            <input
+              matEndDate
+              placeholder="End date"
+              type="text"
+              id="endDate"
+              formControlName="endDate"
+              (dateChange)="keepAvailableVehiclesUpdated()"
+            />
+          </mat-date-range-input>
+          <mat-hint>MM/DD/YYYY – MM/DD/YYYY</mat-hint>
           <div
             *ngIf="
-              modalForm.get('drivingLicenseExDate')?.invalid &&
-              modalForm.get('drivingLicenseExDate')?.touched
+              (modalForm.get('startDate')?.invalid ||
+                modalForm.get('endDate')?.invalid) &&
+              (modalForm.get('startDate')?.touched ||
+                modalForm.get('endDate')?.touched) &&
+              (modalForm.get('employeeId')?.touched ||
+                modalForm.get('employeeId')?.touched)
             "
           >
             <small
               class="error-message"
               *ngIf="
-                modalForm.get('drivingLicenseExDate')?.hasError('required')
+                modalForm.get('startDate')?.hasError('required') ||
+                modalForm.get('endDate')?.hasError('required') ||
+                modalForm.get('employeeId')?.hasError('required')
               "
-              >Driving License Expiration Date is required.</small
+              >Date is required.</small
             >
           </div>
-        </div>
-
+          <mat-datepicker-toggle
+            matIconSuffix
+            [for]="picker"
+          ></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
       </div>
 
+      <br />
 
-      <div class="emergency-wrapper">
-        <div
-          class="sos-icons-wrapper"
-          (click)="isSOSDivHidden = !isSOSDivHidden"
-        >
-          <mat-icon class="low-scale sos-icons-action">sos</mat-icon>
-          <mat-icon [ngClass]="{ hidden: !isSOSDivHidden }" class="low-scale"
-            >expand_more</mat-icon
-          >
-          <mat-icon [ngClass]="{ hidden: isSOSDivHidden }" class="low-scale"
-            >expand_less</mat-icon
-          >
-        </div>
-        <div class="row" [ngClass]="{ hidden: isSOSDivHidden }">
-          <div class="form-item">
-            <label for="emergencyContactName"
-              >Emergency Contact Name (Optional)</label
-            >
-            <input
-              type="text"
-              id="emergencyContactName"
-              formControlName="emergencyContactName"
-            />
+      <div class="row">
+        <div class="form-item">
+          <div class="label-wrapper">
+            <label for="employeeId">Employee</label>
           </div>
-          <div class="form-item">
-            <label for="emergencyContactPhoneNumber"
-              >Emergency Contact Phone (Optional)</label
+          <select
+            id="employeeId"
+            formControlName="employeeId"
+            (change)="keepAvailableVehiclesUpdated()"
+          >
+            <option value="">Select an employee</option>
+            <option *ngFor="let employee of employees" [value]="employee?.id">
+              {{ employee?.firstName + " " + employee?.lastName }}
+            </option>
+          </select>
+          <div
+            *ngIf="
+              modalForm.get('employeeId')?.invalid &&
+              modalForm.get('employeeId')?.touched
+            "
+          >
+            <small
+              class="error-message"
+              *ngIf="modalForm.get('employeeId')?.hasError('required')"
+              >Employee is required.</small
             >
-            <input
-              type="text"
-              id="emergencyContactPhoneNumber"
-              formControlName="emergencyContactPhoneNumber"
-            />
+          </div>
+        </div>
+
+        <div class="form-item">
+          <div class="label-wrapper">
+            <label for="vehicleId">Available Vehicles</label>
+            <mat-spinner
+              *ngIf="isAvailableVehiclesLoading"
+              style="width: 18px; height: 18px"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isAvailableVehiclesLoading">done</mat-icon>
+          </div>
+          <select
+            id="vehicleId"
+            formControlName="vehicleId"
+            [ngClass]="{ 'pointer-events-none': isAvailableVehiclesLoading }"
+          >
+            <option value="">
+              {{
+                isAvailableVehiclesLoading
+                  ? "Select Date and Employee First"
+                  : "Select Vehicle"
+              }}
+            </option>
+            <option
+              *ngFor="let vehicle of availableVehicles"
+              [value]="vehicle.id"
+            >
+              {{
+                vehicle.make + " " + vehicle.model + " - " + vehicle.plateNumber
+              }}
+            </option>
+          </select>
+          <div
+            *ngIf="
+              modalForm.get('vehicleId')?.invalid &&
+              modalForm.get('vehicleId')?.touched
+            "
+          >
+            <small
+              class="error-message"
+              *ngIf="modalForm.get('vehicleId')?.hasError('required')"
+              >Vehicle is required.</small
+            >
           </div>
         </div>
       </div>
+
+      <br />
     </div>
 
     <p class="actions">
       <button type="button" (click)="onCancel()">Cancel</button>
       <button type="submit">
-        {{ isAllocationUpdating ? "Update" : "Add" }}
+        {{ isAllocationUpdating ? "Update" : "Allocate" }}
       </button>
     </p>
   </form>

@@ -24,6 +24,13 @@
         >
         <mat-icon>edit</mat-icon>
         </button>
+        <button
+          class="low-scale"
+          [ngClass]="{ disabled: selectedRow == null }"
+          (click)="addAllocation()"
+        >
+        <mat-icon>timeline</mat-icon>
+        </button>
       </div>
       <button class="add-employee-wrapper" (click)="addEmployee()">
         <mat-icon>control_point</mat-icon>Add Employee

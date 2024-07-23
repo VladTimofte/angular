@@ -23,9 +23,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 import * as moment from 'moment';
 
 import { Employee } from 'src/app/models/employee.model';
-import { EmployeeService } from 'src/app/services/employees.service';
+import { EmployeesService } from 'src/app/services/employees.service';
 import { jobDepartments } from 'src/app/shared/employee';
 import { isCNPValid } from 'src/app/utils/strings';
+import { DrivingLicenseCategoriesComponent } from "../driving-license-categories/driving-license-categories.component";
 
 @Component({
   selector: 'app-add-edit-employee-modal',
@@ -42,7 +43,8 @@ import { isCNPValid } from 'src/app/utils/strings';
     MatDatepickerModule,
     MatFormFieldModule,
     MatNativeDateModule,
-  ],
+    DrivingLicenseCategoriesComponent
+],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AddEditEmployeeModalComponent {
@@ -50,7 +52,7 @@ export class AddEditEmployeeModalComponent {
   @Input({ required: true }) isEmployeeUpdating!: boolean;
   @Output() isAddEditFleetConfirmed = new EventEmitter<boolean>();
 
-  private employeeService = inject(EmployeeService);
+  private employeeService = inject(EmployeesService);
   modalForm: FormGroup;
   isSOSDivHidden: boolean = true;
   jobDepartments: string[] = jobDepartments;
@@ -112,12 +114,6 @@ export class AddEditEmployeeModalComponent {
     } else {
       this.modalForm.markAllAsTouched();
     }
-  }
-
-  isDrivingCategorySelected(category: string): boolean {
-    return this.modalForm
-      .get('drivingLicenseCategories')
-      ?.value.some((el: string) => el === category);
   }
 
   drivingCategoryClicked(category: string) {

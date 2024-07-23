@@ -214,6 +214,11 @@ export class FleetsComponent implements OnInit, OnDestroy {
     this.selectedRow = this.gridApi.getSelectedRows();
   }
 
+  deselectRows() {
+    this.selectedRow = undefined;
+    this.gridApi.deselectAll();
+  }
+
   editRow() {
     this.addEditFleetService
       .openAddEditFleetForm({
@@ -225,20 +230,22 @@ export class FleetsComponent implements OnInit, OnDestroy {
           console.log('Fleet updated'); // Todo: create a confirm message UI
         }
       });
+      this.deselectRows();
   }
 
   onRemoveSelected() {
-    const selectedData = this.gridApi.getSelectedRows();
+    const selectedData = this.gridApi.getSelectedRows()[0];
     this.dialogService
       .openConfirmDialog({
         title: 'Confirm Deletion',
-        message: `Are you sure you want to delete: ${selectedData[0].plateNumber}?`,
+        message: `Are you sure you want to delete: ${selectedData.plateNumber}?`,
+        type: 'question'
       })
       .then((confirmed) => {
         if (confirmed) {
-          this.gridApi.applyTransaction({ remove: selectedData })!;
-          this.fleetsService.removeFleet(selectedData[0].id);
+          this.fleetsService.removeFleet(selectedData.id);
         }
       });
+      this.deselectRows();
   }
 }

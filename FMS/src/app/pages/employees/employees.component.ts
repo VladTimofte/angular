@@ -22,10 +22,11 @@ import {
 import { AddEditFleetModalComponent } from '../../components/add-edit-fleet-modal/add-edit-fleet-modal.component';
 import { AddEditEmployeeFormService } from 'src/app/services/add-edit-employee.service';
 import { DialogService } from 'src/app/services/dialog.service';
-import { EmployeeService } from 'src/app/services/employees.service';
+import { EmployeesService } from 'src/app/services/employees.service';
 import { Employee } from 'src/app/models/employee.model';
 import { emptyEmployeeObj } from 'src/app/shared/employee';
 import { documentExpired, documentExpiresWithinMonth } from 'src/app/utils/booleans';
+import { AddEditAllocationFormService } from 'src/app/services/add-edit-allocation.service';
 
 @Component({
   selector: 'app-employees',
@@ -49,9 +50,10 @@ export class EmployeesComponent implements OnInit, OnDestroy {
   gridOptions: GridOptions;
 
   constructor(
-    private employeeService: EmployeeService,
+    private employeeService: EmployeesService,
     private addEditEmployeeService: AddEditEmployeeFormService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private addEditAllocationFormService: AddEditAllocationFormService
   ) {
     this.gridOptions = <GridOptions>{};
     this.gridOptions.getRowStyle = this.getRowStyle.bind(this);
@@ -183,6 +185,11 @@ export class EmployeesComponent implements OnInit, OnDestroy {
     this.selectedRow = this.gridApi.getSelectedRows();
   }
 
+  deselectRows() {
+    this.selectedRow = undefined;
+    this.gridApi.deselectAll();
+  }
+
   editRow() {
     this.addEditEmployeeService
       .openAddEditEmployeeForm({
@@ -194,21 +201,23 @@ export class EmployeesComponent implements OnInit, OnDestroy {
           console.log('Employee updated'); // Todo: create a confirm message UI
         }
       });
+      this.deselectRows()
   }
 
   onRemoveSelected() {
-    const selectedData = this.gridApi.getSelectedRows();
+    const selectedData = this.gridApi.getSelectedRows()[0];
     this.dialogService
       .openConfirmDialog({
         title: 'Confirm Deletion',
-        message: `Are you sure you want to delete: ${selectedData[0].firstName} ${selectedData[0].lastName}?`,
+        message: `Are you sure you want to delete: ${selectedData.firstName} ${selectedData.lastName}?`,
+        type: 'question'
       })
       .then((confirmed) => {
         if (confirmed) {
-          this.gridApi.applyTransaction({ remove: selectedData })!;
-          this.employeeService.removeEmployee(selectedData[0].id);
+          this.employeeService.removeEmployee(selectedData.id);
         }
       });
+      this.deselectRows()
   }
 
   getRowStyle(params: RowClassParams) {
@@ -218,5 +227,25 @@ export class EmployeesComponent implements OnInit, OnDestroy {
       return { background: 'rgba(255, 255, 0, 0.4) !important' };
     }
     return undefined;
+  }
+
+  addAllocation() {
+    this.addEditAllocationFormService
+      .openAddEditAllocationForm({
+        allocation: {
+          id: '',
+          employeeId: this.selectedRow[0].id,
+          vehicleId: '',
+          startDate: 0,
+          endDate: 0
+        },
+        isAllocationUpdating: false,
+      })
+      .then((confirmed) => {
+        if (confirmed) {
+          console.log('Allocation added'); // Todo: create a confirm message UI
+        }
+      });
+      this.deselectRows()
   }
 }
